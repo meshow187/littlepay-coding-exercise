@@ -47,6 +47,8 @@ To keep the application robust and production-ready, I structured it using a lig
 
 **Infrastructure Layer:** The reading and writing of CSV files are pushed to the outer boundary (CsvFileAdapter), which maps the raw strings to DTOs before translating them into the immutable domain models. This prevents infrastructure details from leaking into the business rules.
 
+**Defensive Pricing:** The FareMatrix strictly enforces known routes. Unknown route combinations will throw an exception rather than defaulting to $0.00, ensuring no "free rides" are accidentally granted due to missing configuration
+
 ## Assumptions Made
 
 While building this solution, I made a few practical assumptions based on standard batch processing and transit rules:
@@ -57,5 +59,7 @@ While building this solution, I made a few practical assumptions based on standa
 
 3. **Orphaned OFF taps:** If a user taps OFF without a preceding ON tap, standard transit logic dictates we cannot determine origin, so the system safely ignores the orphaned tap rather than crashing.
 
-4. **Data cleanliness:** The provided example data contained leading spaces (e.g., `22-01-2018`). I assumed real-world data would be similarly messy, so I added defensive trimming logic to the CSV adapter to prevent DateTimeParseException errors before the data reaches the core domain.
+4. **Consecutive ON Taps:** If a passenger taps ON twice consecutively, the system assumes the first tap was an error or an abandoned journey. It safely ignores the first tap, logs a warning, and tracks the journey from the second ON tap.
+
+5. **Fault Tolerance & Data Cleanliness:** The provided example data contained leading spaces (e.g.,  22-01-2018 ), so defensive trimming is applied. Additionally, if a single row in the CSV is completely malformed, the parser catches the exception, logs the error, and skips that row rather than crashing the entire batch process.
 

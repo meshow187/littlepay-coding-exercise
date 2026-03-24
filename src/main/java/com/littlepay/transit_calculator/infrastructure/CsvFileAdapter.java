@@ -29,17 +29,30 @@ public class CsvFileAdapter {
                     .build()
                     .parse();
 
-            return dtos.stream().map(this::mapToDomain).toList();
+            return dtos.stream()
+                    .map(dto -> {
+                        try {
+                            return mapToDomain(dto);
+                        } catch (Exception e) {
+                            System.err
+                                    .println("ERROR: Skipping malformed row ID " + dto.getId() + ": " + e.getMessage());
+                            return null;
+                        }
+                    })
+                    .filter(tap -> tap != null) // Remove the failed rows
+                    .toList();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to read input CSV file: " + inputFilePath, e);
+            throw new RuntimeException("Fatal error reading CSV file: " + inputFilePath, e);
         }
     }
 
     public void writeTrips(String outputFilePath, List<Trip> trips) {
         try (Writer writer = new FileWriter(outputFilePath)) {
 
-            // Manually write the header since @CsvBindByPosition doesn't generate headers by default
-            writer.write("Started, Finished, DurationSecs, FromStopId, ToStopId, ChargeAmount, CompanyId, BusID, PAN, Status\n");
+            // Manually write the header since @CsvBindByPosition doesn't generate headers
+            // by default
+            writer.write(
+                    "Started, Finished, DurationSecs, FromStopId, ToStopId, ChargeAmount, CompanyId, BusID, PAN, Status\n");
 
             List<TripDto> dtos = trips.stream().map(this::mapToDto).toList();
 
@@ -66,8 +79,7 @@ public class CsvFileAdapter {
                 dto.getStopId().trim(),
                 dto.getCompanyId().trim(),
                 dto.getBusId().trim(),
-                dto.getPan().trim()
-        );
+                dto.getPan().trim());
     }
 
     private TripDto mapToDto(Trip trip) {

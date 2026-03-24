@@ -13,8 +13,7 @@ public class FareMatrix {
     private static final Map<Set<String>, Money> FARES = Map.of(
             Set.of("Stop1", "Stop2"), Money.of("3.25"),
             Set.of("Stop2", "Stop3"), Money.of("5.50"),
-            Set.of("Stop1", "Stop3"), Money.of("7.30")
-    );
+            Set.of("Stop1", "Stop3"), Money.of("7.30"));
 
     /**
      * Calculates the exact fare between two stops.
@@ -24,7 +23,13 @@ public class FareMatrix {
         if (fromStop.equals(toStop)) {
             return Money.zero(); // Cancelled trip
         }
-        return FARES.getOrDefault(Set.of(fromStop, toStop), Money.zero());
+        Set<String> route = Set.of(fromStop, toStop);
+        if (!FARES.containsKey(route)) {
+            // FIX: Defensive coding. Do not give free rides for unknown routes.
+            throw new IllegalArgumentException(
+                    "System Error: No fare configured for route between " + fromStop + " and " + toStop);
+        }
+        return FARES.get(route);
     }
 
     /**
@@ -33,8 +38,9 @@ public class FareMatrix {
     public Money getMaxFareFrom(String originStop) {
         return switch (originStop) {
             case "Stop1", "Stop3" -> Money.of("7.30"); // Max possible from 1 or 3 is to the other end
-            case "Stop2" -> Money.of("5.50");          // Max possible from 2 is to 3
-            default -> Money.zero();                   // Fallback for unknown stops
+            case "Stop2" -> Money.of("5.50"); // Max possible from 2 is to 3
+            default ->
+                throw new IllegalArgumentException("System Error: Unknown origin stop for max fare: " + originStop);
         };
     }
 }

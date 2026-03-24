@@ -42,7 +42,9 @@ public class TripCalculator {
                 if (currentTap.tapType() == TapType.ON) {
                     // If we already have a pending ON tap, the previous one is INCOMPLETE
                     if (pendingOnTap != null) {
-                        completedTrips.add(buildIncompleteTrip(pendingOnTap));
+                        // We DO NOT build an incomplete trip here. We log and overwrite it.
+                        System.out.println("WARN: Consecutive ON taps detected for PAN " + currentTap.pan() +
+                                ". Ignoring first tap at " + pendingOnTap.stopId());
                     }
                     pendingOnTap = currentTap;
                 } else if (currentTap.tapType() == TapType.OFF) {
@@ -81,8 +83,7 @@ public class TripCalculator {
                 tapOn.companyId(),
                 tapOn.busId(),
                 tapOn.pan(),
-                status
-        );
+                status);
     }
 
     private Trip buildIncompleteTrip(Tap tapOn) {
@@ -91,14 +92,13 @@ public class TripCalculator {
         return new Trip(
                 tapOn.dateTimeUTC(),
                 null, // No finish time
-                0L,   // No duration
+                0L, // No duration
                 tapOn.stopId(),
                 null, // No destination
                 maxCharge,
                 tapOn.companyId(),
                 tapOn.busId(),
                 tapOn.pan(),
-                TripStatus.INCOMPLETE
-        );
+                TripStatus.INCOMPLETE);
     }
 }

@@ -1,7 +1,6 @@
 package com.littlepay.transit_calculator.service;
 
 import com.littlepay.transit_calculator.domain.*;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -10,16 +9,14 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 class TripCalculatorTest {
 
+    @Autowired
     private TripCalculator tripCalculator;
-
-    @BeforeEach
-    void setUp() {
-        FareMatrix fareMatrix = new FareMatrix();
-        tripCalculator = new TripCalculator(fareMatrix);
-    }
 
     @Test
     void shouldProcessCompletedTrip() {

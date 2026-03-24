@@ -1,19 +1,17 @@
 package com.littlepay.transit_calculator.service;
 
+import com.littlepay.transit_calculator.config.TransitProperties;
 import com.littlepay.transit_calculator.domain.Money;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
-import java.util.Set;
 
 @Component
 public class FareMatrix {
 
-    // Define the exact fares between stops
-    private static final Map<Set<String>, Money> FARES = Map.of(
-            Set.of("Stop1", "Stop2"), Money.of("3.25"),
-            Set.of("Stop2", "Stop3"), Money.of("5.50"),
-            Set.of("Stop1", "Stop3"), Money.of("7.30"));
+    private final TransitProperties properties;
+
+    public FareMatrix(TransitProperties properties) {
+        this.properties = properties;
+    }
 
     /**
      * Calculates the exact fare between two stops.
@@ -21,26 +19,30 @@ public class FareMatrix {
      */
     public Money getFare(String fromStop, String toStop) {
         if (fromStop.equals(toStop)) {
-            return Money.zero(); // Cancelled trip
+            return Money.zero();
         }
-        Set<String> route = Set.of(fromStop, toStop);
-        if (!FARES.containsKey(route)) {
-            // FIX: Defensive coding. Do not give free rides for unknown routes.
-            throw new IllegalArgumentException(
-                    "System Error: No fare configured for route between " + fromStop + " and " + toStop);
+
+        // Check both directions (e.g., "Stop1-Stop2" or "Stop2-Stop1")
+        String route1 = fromStop + "-" + toStop;
+        String route2 = toStop + "-" + fromStop;
+
+        if (properties.getFares().containsKey(route1)) {
+            return Money.of(properties.getFares().get(route1));
+        } else if (properties.getFares().containsKey(route2)) {
+            return Money.of(properties.getFares().get(route2));
         }
-        return FARES.get(route);
+
+        throw new IllegalArgumentException(
+                "System Error: No fare configured for route between " + fromStop + " and " + toStop);
     }
 
     /**
      * Determines the maximum possible charge from a given origin stop.
      */
     public Money getMaxFareFrom(String originStop) {
-        return switch (originStop) {
-            case "Stop1", "Stop3" -> Money.of("7.30"); // Max possible from 1 or 3 is to the other end
-            case "Stop2" -> Money.of("5.50"); // Max possible from 2 is to 3
-            default ->
-                throw new IllegalArgumentException("System Error: Unknown origin stop for max fare: " + originStop);
-        };
+        if (!properties.getMaxFares().containsKey(originStop)) {
+            throw new IllegalArgumentException("System Error: Unknown origin stop for max fare: " + originStop);
+        }
+        return Money.of(properties.getMaxFares().get(originStop));
     }
 }

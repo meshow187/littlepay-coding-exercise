@@ -1,0 +1,11 @@
+transit:
+  csv:
+    date-format: "dd-MM-yyyy HH:mm:ss"
+  fares:
+    Stop1-Stop2: "3.25"
+    Stop2-Stop3: "5.50"
+    Stop1-Stop3: "7.30"
+  max-fares:
+    Stop1: "7.30"
+    Stop2: "5.50"
+    Stop3: "7.30"

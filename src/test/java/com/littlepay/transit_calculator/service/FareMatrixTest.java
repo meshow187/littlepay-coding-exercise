@@ -1,19 +1,17 @@
 package com.littlepay.transit_calculator.service;
 
 import com.littlepay.transit_calculator.domain.Money;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SpringBootTest
 class FareMatrixTest {
 
+    @Autowired
     private FareMatrix fareMatrix;
-
-    @BeforeEach
-    void setUp() {
-        fareMatrix = new FareMatrix();
-    }
 
     @Test
     void shouldCalculateCorrectFareForCompletedTrips() {

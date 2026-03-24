@@ -1,5 +1,6 @@
 package com.littlepay.transit_calculator.infrastructure;
 
+import com.littlepay.transit_calculator.config.TransitProperties;
 import com.littlepay.transit_calculator.domain.Tap;
 import com.littlepay.transit_calculator.domain.TapType;
 import com.littlepay.transit_calculator.domain.Trip;
@@ -19,7 +20,11 @@ import java.util.List;
 @Service
 public class CsvFileAdapter {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
+    private final DateTimeFormatter formatter;
+
+    public CsvFileAdapter(TransitProperties properties) {
+        this.formatter = DateTimeFormatter.ofPattern(properties.getCsv().getDateFormat());
+    }
 
     public List<Tap> readTaps(String inputFilePath) {
         try (Reader reader = new FileReader(inputFilePath)) {
@@ -70,7 +75,7 @@ public class CsvFileAdapter {
 
     private Tap mapToDomain(TapDto dto) {
         // Trim the raw string and parse it safely
-        LocalDateTime parsedDate = LocalDateTime.parse(dto.getDateTimeUTC().trim(), FORMATTER);
+        LocalDateTime parsedDate = LocalDateTime.parse(dto.getDateTimeUTC().trim(), this.formatter);
 
         return new Tap(
                 dto.getId(),
@@ -84,8 +89,8 @@ public class CsvFileAdapter {
 
     private TripDto mapToDto(Trip trip) {
         return TripDto.builder()
-                .started(trip.started().format(FORMATTER))
-                .finished(trip.finished() != null ? trip.finished().format(FORMATTER) : "")
+                .started(trip.started().format(this.formatter))
+                .finished(trip.finished() != null ? trip.finished().format(this.formatter) : "")
                 .durationSecs(trip.durationSecs())
                 .fromStopId(trip.fromStopId())
                 .toStopId(trip.toStopId() != null ? trip.toStopId() : "")
